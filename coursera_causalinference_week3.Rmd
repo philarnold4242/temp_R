@@ -30,7 +30,7 @@ data(lalonde)
 
 ```{r}
 xvars = colnames(lalonde)
-xvars = xvars[2:length(xvars)]
+xvars = xvars[2:(length(xvars)-1)]
 
 table1 = CreateTableOne(vars = xvars,  
                         strata = "treat",
@@ -41,3 +41,65 @@ print(table1,
 ```
 
 ### Question 2
+
+```{r}
+-6984.17 + 6349.14
+```
+
+### Question 3
+
+```{r}
+treat = lalonde$treat
+age = lalonde$age
+educ = lalonde$educ
+black = lalonde$black
+hispan = lalonde$hispan
+married = lalonde$married
+nodegree = lalonde$nodegree
+re74 = lalonde$re74
+re75 = lalonde$re75
+  
+psmodel = glm(treat ~ age + educ + black + hispan + married + nodegree + re74 + re75, 
+              family = binomial(link = logit),
+              data = lalonde)
+
+min(psmodel$fitted.values)
+max(psmodel$fitted.values)
+```
+
+
+### Question 4
+
+```{r}
+library(car)
+
+set.seed(931139)
+
+psmatch = Match(Tr = lalonde$treat,
+                M = 1,
+                X = logit(psmodel$fitted.values),
+                replace = FALSE)
+
+psmatch = Match(Tr = lalonde$treat,
+                M = 1,
+                X = psmodel$fitted.values,
+                replace = FALSE)
+
+matched = lalonde[unlist(psmatch[c("index.treated", "index.control")]), ]
+
+matchedtable1 = CreateTableOne(vars = xvars,
+                               strata = "treat",
+                               data = matched,
+                               test = FALSE)
+
+print(matchedtable1, 
+      smd = TRUE)
+```
+
+### Question 7
+
+```{r}
+re78_t = mean( matched[ matched$treat==1, ]$re78)
+re78_c = mean( matched[ matched$treat==0, ]$re78)
+re78_t - re78_c
+```
