@@ -1,0 +1,13 @@
+---
+title: "Coursera_Causality_Week3"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Coursera: Crash Course Causal Inference
+Week 3 - Programming assignment
+
+
