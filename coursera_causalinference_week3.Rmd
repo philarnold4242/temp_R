@@ -58,8 +58,10 @@ married = lalonde$married
 nodegree = lalonde$nodegree
 re74 = lalonde$re74
 re75 = lalonde$re75
+
+out = lalonde$re78
   
-psmodel = glm(treat ~ age + educ + black + hispan + married + nodegree + re74 + re75, 
+psmodel = glm(treat ~ age + educ + black + hispan + married + nodegree + re74 + re75,
               family = binomial(link = logit),
               data = lalonde)
 
@@ -77,11 +79,6 @@ set.seed(931139)
 
 psmatch = Match(Tr = lalonde$treat,
                 M = 1,
-                X = logit(psmodel$fitted.values),
-                replace = FALSE)
-
-psmatch = Match(Tr = lalonde$treat,
-                M = 1,
                 X = psmodel$fitted.values,
                 replace = FALSE)
 
@@ -96,10 +93,51 @@ print(matchedtable1,
       smd = TRUE)
 ```
 
+
+### Question 6
+
+Divide by 2:
+```{r}
+dim(matched)
+```
+
+
 ### Question 7
 
 ```{r}
-re78_t = mean( matched[ matched$treat==1, ]$re78)
-re78_c = mean( matched[ matched$treat==0, ]$re78)
-re78_t - re78_c
+set.seed(931139)
+
+psmatch = Match(Tr = lalonde$treat,
+                M = 1,
+                X = psmodel$fitted.values,
+                replace = FALSE,
+                caliper = 0.1)
+
+matched = lalonde[unlist(psmatch[c("index.treated", "index.control")]), ]
+
+matchedtable1 = CreateTableOne(vars = xvars,
+                               strata = "treat",
+                               data = matched,
+                               test = FALSE)
+
+print(matchedtable1, 
+      smd = TRUE)
+
+mean(matched[matched$treat==1, ]$re78)-mean(matched[matched$treat==0, ]$re78)
+
+```
+
+### Question 8
+
+```{r}
+yt = matched[matched$treat==1, ]$re78
+yc = matched[matched$treat==0, ]$re78
+
+diffe = yt - yc
+
+t.test(diffe)
+
+
+
+
 ```
