@@ -3,3 +3,69 @@ title: 'Coursera: Causal Inferenence - Week 4'
 output: html_document
 ---
 
+### Prepare R
+```{r}
+install.packages("tableone")
+install.packages("Matching")
+install.packages("ipw")
+install.packages("survey")
+install.packages("MatchIt")
+```
+
+```{r}
+library(tableone)
+library(Matching)
+library(ipw)
+library(survey)
+library(MatchIt)
+
+data(lalonde)
+```
+
+### Inspect data
+```{r}
+str(lalonde)
+```
+
+### Task
+Fit a propensity score model. Use a logistic regression model, where the outcome is treatment. Include the 8 confounding variables in the model as predictors, with no interaction terms or non-linear terms (such as squared terms). Obtain the propensity score for each subject. Next, obtain the inverse probability of treatment weights for each subject.
+
+### Question 1
+We use a logistic regression to calculate propensity scores:
+```{r}
+psmodel <- glm(treat ~ age + educ + 
+                 black + hispan + married + nodegree +
+                 re74 + re75,
+               family = binomial(link = "logit"),
+               data = lalonde)
+
+min(psmodel$fitted.values)
+max(psmodel$fitted.values)
+
+ps <- predict(psmodel, type = "response" )
+```
+
+> glm.predict(type = "reponse"): the type of prediction required. The default is on the scale of the linear predictors; the alternative "response" is on the scale of the response variable. Thus for a default binomial model the default predictions are of log-odds (probabilities on logit scale) and type = "response" gives the predicted probabilities. The "terms" option returns a matrix giving the fitted values of each term in the model formula on the linear predictor scale.
+
+### Question 2
+Find the standardized differences for each confounder on the weighted (pseudo) population. What is the standardized difference for nodegree?
+
+```{r}
+weight <- ifelse(lalonde$treat==1, 1/ps, 1/(1-ps))
+
+weighteddata <- svydesign(ids = ~1,
+                          data = lalonde,
+                          weights = weight)
+
+xvars <- c("treat", "age", "educ", "black", "hispan", "married",          "nodegree", "re74", "re75", "re78")
+
+weightedtable <- svyCreateTableOne(vars = xvars,
+                                   strata = "treat",
+                                   data = weighteddata,
+                                   test = F)
+
+print(weightedtable, smd = T)
+```
+
+### Question 3
+Using IPTW, find the estimate and 95% confidence interval for the average causal effect. This can be obtained from svyglm
