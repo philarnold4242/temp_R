@@ -31,7 +31,7 @@ str(lalonde)
 Fit a propensity score model. Use a logistic regression model, where the outcome is treatment. Include the 8 confounding variables in the model as predictors, with no interaction terms or non-linear terms (such as squared terms). Obtain the propensity score for each subject. Next, obtain the inverse probability of treatment weights for each subject.
 
 ### Question 1
-We use a logistic regression to calculate propensity scores:
+What are the minimum and maximum weights?
 ```{r}
 psmodel <- glm(treat ~ age + educ + 
                  black + hispan + married + nodegree +
@@ -43,6 +43,11 @@ min(psmodel$fitted.values)
 max(psmodel$fitted.values)
 
 ps <- predict(psmodel, type = "response" )
+
+
+weight <- ifelse(lalonde$treat==1, 1/ps, 1/(1-ps))
+min(weight)
+max(weight)
 ```
 
 > glm.predict(type = "reponse"): the type of prediction required. The default is on the scale of the linear predictors; the alternative "response" is on the scale of the response variable. Thus for a default binomial model the default predictions are of log-odds (probabilities on logit scale) and type = "response" gives the predicted probabilities. The "terms" option returns a matrix giving the fitted values of each term in the model formula on the linear predictor scale.
@@ -51,8 +56,6 @@ ps <- predict(psmodel, type = "response" )
 Find the standardized differences for each confounder on the weighted (pseudo) population. What is the standardized difference for nodegree?
 
 ```{r}
-weight <- ifelse(lalonde$treat==1, 1/ps, 1/(1-ps))
-
 weighteddata <- svydesign(ids = ~1,
                           data = lalonde,
                           weights = weight)
@@ -68,4 +71,24 @@ print(weightedtable, smd = T)
 ```
 
 ### Question 3
-Using IPTW, find the estimate and 95% confidence interval for the average causal effect. This can be obtained from svyglm
+Using IPTW, find the estimate and 95% confidence interval for the average causal effect. This can be obtained from svyglm.
+
+```{r}
+msm <- (svyglm(re78 ~ treat, 
+               design = svydesign(~ 1,
+                                  weights = weight,
+                                  data = lalonde)))
+
+coef(msm)
+confint(msm)
+```
+
+
+### Question 4
+Now truncate the weights at the 1st and 99th percentiles. This can be done with the trunc=0.01 option in svyglm.
+
+Using IPTW with the truncated weights, find the estimate and 95% confidence interval for the average causal effect
+
+```{r}
+486.93 (-1090.64, 2064.51)
+```
