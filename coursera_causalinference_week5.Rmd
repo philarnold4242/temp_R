@@ -1,0 +1,58 @@
+---
+title: "Week 5"
+output: html_notebook
+---
+
+
+Load necessary packages for IV analysis:
+```{r}
+library("ivpack")
+data(card.data)
+```
+
+Estimate proportion of compliers:
+```{r}
+# Indicator variable that you have more than 12 years of education
+educ12 <- card.data$educ > 12
+
+# What would a complier mean here? If you lived close to a 4 year collge, you 
+# would end up having more than 12 years of education. 
+# Note: most people stop after college and have 10 years of education.
+print(mean(educ12[card.data$nearc4==1]))
+print(mean(educ12[card.data$nearc4==0]))
+mean(educ12[card.data$nearc4==1]) - mean(educ12[card.data$nearc4==0])
+```
+So, IV is not extremely strong but also not very weak.
+
+
+
+
+
+Manual estimation:
+```{r}
+propcomp <- mean(educ12[card.data$nearc4==1]) - mean(educ12[card.data$nearc4==0])
+
+itt <-mean(card.data$lwage[card.data$nearc4==1]) - mean(card.data$lwage[card.data$nearc4==0])
+
+cage <- itt / propcomp
+
+```
+
+
+Use 2SLS:
+```{r}
+# Stage 1
+s1 <- lm(educ12 ~ card.data$nearc4)
+predtx <- predict(s1, type = "response")
+table(predtx)
+
+# Stage 2
+s2 <- lm(card.data$lwage ~ predtx)
+summary(s2)
+```
+
+
+Use 2SLS using ivpack:
+```{r}
+```
+
