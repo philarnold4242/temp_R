@@ -54,5 +54,8 @@ summary(s2)
 
 Use 2SLS using ivpack:
 ```{r}
+ivmodel <- ivreg(lwage ~ educ12, ~nearc4, x=T, data=card.data)
+robust.se(ivmodel)
+
 ```
 
