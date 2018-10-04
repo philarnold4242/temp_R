@@ -54,6 +54,20 @@ p <- ggplot(dat, aes(Subject, Months)) +
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank())
 
-ggplotly(p)
+# ggplotly(p)
 ```
 
+
+## Melt
+
+See [here](https://www.statmethods.net/management/reshape.html).
+
+```{r}
+mtcars
+mydata <- t(mtcars)
+```
+
+```{r}
+mdata <- melt(mydata, id=c("id","time"))
+mdata
+```
